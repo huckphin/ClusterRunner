@@ -56,7 +56,7 @@ class Slave(object):
         :type build: Build
         """
         slave_project_type_params = build.build_request.build_parameters().copy()
-        slave_project_type_params.update(build.project_type.slave_param_overrides())
+        #slave_project_type_params.update(build.project_type.slave_param_overrides())
 
         setup_url = self._slave_api.url('build', build.build_id(), 'setup')
         post_data = {

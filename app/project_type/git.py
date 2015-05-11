@@ -119,15 +119,17 @@ class Git(ProjectType):
         :rtype: dict[str, str]
         """
         param_overrides = super().slave_param_overrides()
+        clone_from_master = Configuration['clone_project_from_master']
 
         # We modify the repo url so the slave clones or fetches from the master directly. This should be faster than
         # cloning/fetching from the original git remote.
-        master_repo_url = 'ssh://{}{}'.format(Configuration['hostname'], self._repo_directory)
-        param_overrides['url'] = master_repo_url  # This causes the slave to clone directly from the master.
+        if clone_from_master is not None and clone_from_master == "True":
+          master_repo_url = 'ssh://{}{}'.format(Configuration['hostname'], self._repo_directory)
+          param_overrides['url'] = master_repo_url  # This causes the slave to clone directly from the master.
 
-        # The user-specified branch is overwritten with a locally created ref so that slaves working on a job can
-        # continue to fetch the same HEAD, even if the master resets the user-specified branch for another build.
-        param_overrides['branch'] = self._local_ref
+          # The user-specified branch is overwritten with a locally created ref so that slaves working on a job can
+          # continue to fetch the same HEAD, even if the master resets the user-specified branch for another build.
+          param_overrides['branch'] = self._local_ref
 
         return param_overrides
 
