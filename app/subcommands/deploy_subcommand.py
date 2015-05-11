@@ -201,7 +201,7 @@ class DeploySubcommand(Subcommand):
         network = Network()
 
         def all_slaves_registered():
-            return len(self._registered_slave_hostnames(slave_api_url, network)) == len(slaves_to_validate)
+            return set(self._registered_slave_hostnames(slave_api_url, network)) == set(slaves_to_validate)
 
         if not wait_for(
                 boolean_predicate=all_slaves_registered,

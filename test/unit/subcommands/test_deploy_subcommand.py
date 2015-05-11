@@ -1,8 +1,14 @@
+from functools import partial
+from unittest.mock import MagicMock
+
+from genty import genty, genty_dataset
+
 from app.subcommands.deploy_subcommand import DeploySubcommand
 from app.util.network import Network
 from test.framework.base_unit_test_case import BaseUnitTestCase
 
 
+@genty
 class TestDeploySubcommand(BaseUnitTestCase):
     def setUp(self):
         super().setUp()
@@ -140,3 +146,20 @@ class TestDeploySubcommand(BaseUnitTestCase):
         deploy_subcommand = DeploySubcommand()
         non_registered = deploy_subcommand._non_registered_slaves(registered_hosts, slaves_to_validate)
         self.assertEquals(0, len(non_registered))
+
+    @genty_dataset(
+        (['slave_host_1', 'slave_host_2'], ['slave_host_1', 'slave_host_2'], True),
+        (['slave_host_1', 'slave_host_2'], ['slave_host_3', 'slave_host_2'], False),
+        (['slave_host_1'], ['slave_host_1', 'slave_host_2'], False),
+    )
+    def test_validate_deployment_checks_each_slave_is_connected(self, slaves_to_validate, connected_slaves, is_valid):
+        deploy_subcommand = DeploySubcommand()
+        deploy_subcommand._registered_slave_hostnames = MagicMock(return_value=connected_slaves)
+        deploy_subcommand._SLAVE_REGISTRY_TIMEOUT_SEC = 1
+        deploy_subcommand._non_registered_slaves = MagicMock()
+        validate = partial(deploy_subcommand._validate_successful_deployment, 'master_host_url', slaves_to_validate)
+        if not is_valid:
+            with self.assertRaises(SystemExit):
+                validate()
+        else:
+            validate()
